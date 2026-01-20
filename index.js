@@ -2,7 +2,7 @@ import { extension_settings } from "../../../extensions.js";
 import { saveSettingsDebounced } from "../../../script.js";
 
 const extensionName = "BabyFontManager";
-const extensionFolderPath = `scripts/extensions/${extensionName}/`;
+const extensionFolderPath = `scripts/extensions/third-party/${extensionName}/`;
 const storageKey = "BabyCustomFonts";
 
 // --- ส่วนที่ 1: ระบบจัดการฟอนต์ (สมองกล) ---
