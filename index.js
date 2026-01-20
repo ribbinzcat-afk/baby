@@ -48,7 +48,7 @@ jQuery(document).ready(function () {
             <div style="padding: 20px; overflow-y: auto; flex-grow: 1;">
                 <div style="margin-bottom: 20px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px;">
                     <label style="color: #ddd; font-size: 0.9em; display:block; margin-bottom:5px;">📂 อัปโหลดฟอนต์ (.ttf/.otf)</label>
-                    <input type="file" id="baby-font-upload" accept=".ttf,.otf" style="width:100%; margin-bottom:10px; color: #aaa; font-size: 0.8em;">
+                    <input type="file" id="baby-font-upload" accept=".ttf,.otf" placeholder="เลือกไฟล์" style="width:100%; margin-bottom:10px; color: #aaa; font-size: 0.8em;">
                     <input type="text" id="baby-font-name" placeholder="ตั้งชื่อฟอนต์น่ารักๆ..." style="width:100%; background:#333; color:white; border:1px solid #555; padding:8px 12px; border-radius: 8px; box-sizing: border-box;">
                     <button id="baby-save-btn" style="width:100%; margin-top:10px; background: linear-gradient(45deg, #ff99b5, #ffb7b2); color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: transform 0.1s;">✨ บันทึกฟอนต์</button>
                 </div>
