@@ -1,0 +1,8 @@
+{
+    "name": "Baby Font Manager",
+    "version": "1.0.0",
+    "author": "Robo & Baby",
+    "description": "Extension สำหรับอัปโหลดและเปลี่ยนฟอนต์ตามใจชอบ พร้อมธีมสีชมพู Rabbit Tongue!",
+    "js": "index.js",
+    "css": "style.css"
+}

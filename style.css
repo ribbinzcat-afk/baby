@@ -1,0 +1,43 @@
+/* หน้าต่างจัดการฟอนต์ */
+.baby-font-modal {
+    background-color: rgba(20, 20, 20, 0.95);
+    border: 2px solid #ff99b5; /* ขอบสีชมพู */
+    border-radius: 15px;
+    padding: 20px;
+    color: white;
+    box-shadow: 0 0 15px rgba(255, 153, 181, 0.3);
+}
+
+/* ปุ่มกดสี Rabbit Tongue */
+.baby-btn {
+    background-color: #ff99b5;
+    color: #5a2d3a;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    margin: 5px;
+}
+
+.baby-btn:hover {
+    background-color: #ffc2d4;
+    transform: scale(1.05);
+    box-shadow: 0 0 10px #ff99b5;
+}
+
+/* รายการฟอนต์ */
+.font-list-item {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.font-preview {
+    font-size: 1.2em;
+}
