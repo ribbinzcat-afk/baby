@@ -1,11 +1,19 @@
 jQuery(document).ready(function () {
+    // ---------------------------------------------------------
+    // 1. ตั้งค่าตัวแปรและโหลดข้อมูลเก่า (Setup & Config)
+    // ---------------------------------------------------------
     const extensionName = "BabyFontManager";
     const storageKey = "BabyCustomFonts";
 
-    // --- ส่วนโหลดฟอนต์ (Logic เดิม) ---
     let savedFonts = JSON.parse(localStorage.getItem(storageKey) || "[]");
     let currentFont = localStorage.getItem(storageKey + "_Active");
+    let savedBtnPos = JSON.parse(localStorage.getItem(storageKey) || '{"top":"10px","right":"100px"}');
 
+    // ---------------------------------------------------------
+    // 2. ฟังก์ชันหลัก (Core Functions)
+    // ---------------------------------------------------------
+
+    // ฟังก์ชันฝัง CSS @font-face ลงในหน้าเว็บ
     function injectFont(name, dataUrl) {
         const styleId = `font-style-${name.replace(/\s+/g, '-')}`;
         if (!document.getElementById(styleId)) {
@@ -21,6 +29,7 @@ jQuery(document).ready(function () {
         }
     }
 
+    // ฟังก์ชันเปลี่ยนฟอนต์ให้ทั้งหน้าเว็บ
     function applyFont(name) {
         if (!name) return;
         jQuery('body').css('font-family', `'${name}', sans-serif`);
@@ -28,252 +37,12 @@ jQuery(document).ready(function () {
         toastr.success(`เปลี่ยนฟอนต์เป็น ${name} แล้วครับ!`, "Baby Font Manager");
     }
 
-    savedFonts.forEach(font => injectFont(font.name, font.data));
-    if (currentFont) applyFont(currentFont);
-
-    // --- ส่วนสร้างหน้าต่าง UI (อัปเกรดปุ่มเลือกไฟล์!) ---
-
-    // CSS สำหรับปุ่มสวยๆ และ Scrollbar
-    const customStyle = `
-        <style>
-            .baby-file-label {
-                display: block;
-                width: 100%;
-                padding: 10px;
-                background: rgba(255, 153, 181, 0.2);
-                border: 1px dashed #ff99b5;
-                border-radius: 8px;
-                text-align: center;
-                color: #ffb7c5;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                margin-top: 5px;
-            }
-            .baby-file-label:hover {
-                background: rgba(255, 153, 181, 0.4);
-                color: white;
-                border-style: solid;
-            }
-            .baby-btn-pink {
-                background: linear-gradient(45deg, #ff99b5, #ff5e7e);
-                color: white;
-                border: none;
-                padding: 8px 15px;
-                border-radius: 20px;
-                cursor: pointer;
-                box-shadow: 0 2px 5px rgba(255, 94, 126, 0.4);
-                transition: transform 0.2s;
-            }
-            .baby-btn-pink:active { transform: scale(0.95); }
-            /* ซ่อน Input ตัวจริงที่หน้าตาไม่สวย */
-            #baby-font-upload { display: none; }
-        </style>
-    `;
-    jQuery('head').append(customStyle);
-
-    const modalHtml = `
-        <div id="baby-font-manager-modal" class="baby-font-modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:9999; width: 400px; max-height: 80vh; overflow-y: auto; background: rgba(20, 20, 20, 0.95); border: 2px solid #ff99b5; border-radius: 15px; padding: 20px; box-shadow: 0 0 20px rgba(255, 153, 181, 0.3); backdrop-filter: blur(10px);">
-
-            <!-- ส่วนหัว: ลากได้ -->
-            <div id="baby-modal-header" style="cursor: grab; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,153,181,0.3);">
-                <h3 style="color:#ff99b5; text-align:center; margin:0; pointer-events: none;">🎀 คลังฟอนต์ของคุณเบบี้ 🎀</h3>
-                <div style="text-align:center; font-size: 0.8em; color: #888;">(ลากตรงนี้เพื่อย้ายตำแหน่ง)</div>
-            </div>
-
-            <div style="margin-bottom: 15px;">
-                <label style="color: white; font-weight: bold;">1. เลือกไฟล์ฟอนต์ (.ttf / .otf)</label>
-
-                <!-- ปุ่มเลือกไฟล์แบบใหม่ ไฉไลกว่าเดิม -->
-                <label for="baby-font-upload" class="baby-file-label">
-                    📂 จิ้มตรงนี้เพื่อเลือกไฟล์ฟอนต์ค่ะ
-                </label>
-                <input type="file" id="baby-font-upload" accept=".ttf,.otf">
-                <div id="file-name-display" style="color: #ff99b5; font-size: 0.9em; margin-top: 5px; text-align: center; min-height: 1.2em;"></div>
-
-                <label style="color: white; font-weight: bold; margin-top: 10px; display: block;">2. ตั้งชื่อฟอนต์</label>
-                <input type="text" id="baby-font-name" placeholder="เช่น 'ลายมือน่ารัก'..." style="width:100%; margin-top:5px; background:rgba(255,255,255,0.1); color:white; border:1px solid #555; padding:8px; border-radius: 5px; outline: none;">
-
-                <button id="baby-save-btn" class="baby-btn-pink" style="width:100%; margin-top:15px;">บันทึกฟอนต์ ✨</button>
-            </div>
-
-            <div style="border-top: 1px solid rgba(255,153,181,0.3); margin-top: 15px; padding-top: 10px;">
-                <h4 style="color:white; margin: 0 0 10px 0;">รายการฟอนต์ที่มี:</h4>
-                <div id="baby-font-list" style="max-height: 150px; overflow-y: auto; padding-right: 5px;">
-                    <!-- รายชื่อฟอนต์ -->
-                </div>
-            </div>
-
-            <!-- 👇 เพิ่มส่วนนี้เข้าไปครับ: ตัวเลือกเปิด/ปิดปุ่มลอยฟ้า 👇 -->
-            <div style="margin-top: 15px; display: flex; align-items: center; gap: 10px; color: white; font-size: 0.9em;">
-                <input type="checkbox" id="baby-toggle-float" checked>
-                <label for="baby-toggle-float" style="cursor: pointer;">แสดงปุ่มลอยฟ้า (Floating Button)</label>
-            </div>
-            <!-- 👆 จบส่วนที่เพิ่ม 👆 -->
-
-
-            <button id="baby-reset-btn" class="baby-btn" style="background:#ffcc00; color:black; width:100%; margin-top:5px; border: none; padding: 8px; border-radius: 5px; cursor: pointer; font-weight: bold;">
-    ↺ คืนค่าฟอนต์เดิม (Reset)
-            </button>
-
-            <button id="baby-close-btn" style="background:transparent; border: 1px solid #555; color:#aaa; width:100%; margin-top:15px; padding: 8px; border-radius: 5px; cursor: pointer;">ปิดหน้าต่าง</button>
-        </div>
-    `;
-
-    if (jQuery('#baby-font-manager-modal').length > 0) jQuery('#baby-font-manager-modal').remove();
-    jQuery('body').append(modalHtml);
-
-    // --- ส่วนสร้างปุ่มลอยฟ้า (เหมือนเดิม) ---
-    if (jQuery('#baby-font-trigger-btn').length > 0) jQuery('#baby-font-trigger-btn').remove();
-
-    // โหลดตำแหน่งปุ่มที่จำไว้ (ถ้ามี)
-    const savedBtnPos = JSON.parse(localStorage.getItem(storageKey + "_BtnPos") || '{"top":"10px","right":"100px"}');
-
-    const floatingBtn = jQuery(`
-        <div id="baby-font-trigger-btn" title="เปลี่ยนฟอนต์">🎀</div>
-    `);
-
-        // เช็คก่อนว่ามีปุ่มนี้หรือยัง (กันเบิ้ล) แล้วค่อยยัดเข้าไปในเมนู
-    if (jQuery('#baby-font-menu-item').length === 0) {
-        jQuery('#extensions_menu').append(menuBtn);
-    }
-
-    // กดปุ่มในเมนูแล้วเปิดหน้าต่างเหมือนกัน
-    menuBtn.on('click', () => {
-        updateFontList();
-        jQuery('#baby-font-manager-modal').fadeIn();
-    });
-
-    floatingBtn.css({
-        "position": "fixed",
-        "top": savedBtnPos.top,
-        "right": savedBtnPos.right,
-        "left": savedBtnPos.left || "auto", // กันเหนียว
-        "z-index": "10000",
-        "cursor": "grab",
-        "font-size": "24px",
-        "background": "rgba(20, 20, 20, 0.6)",
-        "border-radius": "50%",
-        "width": "45px",
-        "height": "45px",
-        "display": "flex",
-        "align-items": "center",
-        "justify-content": "center",
-        "backdrop-filter": "blur(5px)",
-        "border": "2px solid #ff99b5",
-        "box-shadow": "0 0 10px rgba(255, 153, 181, 0.5)",
-        "user-select": "none"
-    });
-
-    jQuery('body').append(floatingBtn);
-
-        // --- Logic สั่งซ่อน/แสดงปุ่มลอยฟ้า ---
-
-    // โหลดค่าเดิมที่เคยตั้งไว้ (ถ้าเคยสั่งซ่อนไว้ ก็ให้ซ่อนเลยตอนเปิดมา)
-    const isFloatingHidden = localStorage.getItem("BabyFont_HideFloat") === "true";
-
-    if (isFloatingHidden) {
-        jQuery('#baby-font-trigger-btn').hide(); // ซ่อนปุ่ม
-        jQuery('#baby-toggle-float').prop('checked', false); // เอาติ๊กออก
-    }
-
-    // เมื่อกดติ๊กถูก/เอาออก
-    jQuery(document).on('change', '#baby-toggle-float', function() {
-        if(this.checked) {
-            jQuery('#baby-font-trigger-btn').fadeIn(); // แสดงปุ่ม
-            localStorage.setItem("BabyFont_HideFloat", "false");
-        } else {
-            jQuery('#baby-font-trigger-btn').fadeOut(); // ซ่อนปุ่ม
-            localStorage.setItem("BabyFont_HideFloat", "true");
-        }
-    });
-
-    // --- Logic การลากปุ่ม (Draggable Button) ---
-    let isDraggingBtn = false;
-    let offsetBtn = { x: 0, y: 0 };
-
-    floatingBtn.on('mousedown', function(e) {
-        isDraggingBtn = true;
-        offsetBtn.x = e.clientX - floatingBtn[0].getBoundingClientRect().left;
-        offsetBtn.y = e.clientY - floatingBtn[0].getBoundingClientRect().top;
-        floatingBtn.css('cursor', 'grabbing');
-    });
-
-    jQuery(document).on('mousemove', function(e) {
-        if (isDraggingBtn) {
-            e.preventDefault();
-            const newTop = e.clientY - offsetBtn.y;
-            const newLeft = e.clientX - offsetBtn.x;
-            floatingBtn.css({ top: newTop + 'px', left: newLeft + 'px', right: 'auto' });
-        }
-    });
-
-    jQuery(document).on('mouseup', function() {
-        if (isDraggingBtn) {
-            isDraggingBtn = false;
-            floatingBtn.css('cursor', 'grab');
-            // จำตำแหน่งล่าสุดไว้
-            const pos = { top: floatingBtn.css('top'), left: floatingBtn.css('left'), right: 'auto' };
-            localStorage.setItem(storageKey + "_BtnPos", JSON.stringify(pos));
-        }
-    });
-
-    // --- Logic การลากหน้าต่าง (Draggable Modal) ---
-    const modal = jQuery('#baby-font-manager-modal');
-    const header = jQuery('#baby-modal-header');
-    let isDraggingModal = false;
-    let offsetModal = { x: 0, y: 0 };
-
-    header.on('mousedown', function(e) {
-        isDraggingModal = true;
-        offsetModal.x = e.clientX - modal[0].getBoundingClientRect().left;
-        offsetModal.y = e.clientY - modal[0].getBoundingClientRect().top;
-        header.css('cursor', 'grabbing');
-    });
-
-    jQuery(document).on('mousemove', function(e) {
-        if (isDraggingModal) {
-            e.preventDefault();
-            // คำนวณตำแหน่งใหม่ (เอา transform ออกแล้วใช้ top/left ตรงๆ เพื่อความง่ายในการลาก)
-            const newTop = e.clientY - offsetModal.y;
-            const newLeft = e.clientX - offsetModal.x;
-
-            // กันไม่ให้ลากตกจอ (Boundary Check)
-            const maxTop = jQuery(window).height() - element.outerHeight();
-            const maxLeft = jQuery(window).width() - element.outerWidth();
-
-            modal.css({
-                top: newTop + 'px',
-                left: newLeft + 'px',
-                transform: 'none' // ยกเลิก translate เดิม
-            });
-        }
-    });
-
-    jQuery(document).on('mouseup', function() {
-        if (isDraggingModal) {
-            isDraggingModal = false;
-            header.css('cursor', 'grab');
-        }
-    });
-
-    // --- Event Listeners ---
-
-    // โชว์ชื่อไฟล์เมื่อเลือกเสร็จ
-    jQuery(document).on('change', '#baby-font-upload', function() {
-        const fileName = this.files[0] ? this.files[0].name : "";
-        if (fileName) {
-            jQuery('#file-name-display').text("✅ เลือกไฟล์: " + fileName);
-            jQuery('.baby-file-label').css('border-style', 'solid').css('background', 'rgba(255, 153, 181, 0.4)');
-        } else {
-            jQuery('#file-name-display').text("");
-        }
-    });
-
+    // ฟังก์ชันอัปเดตรายการฟอนต์ในหน้าต่าง
     function updateFontList() {
         const list = jQuery('#baby-font-list');
         list.empty();
         if (savedFonts.length === 0) {
-            list.append('<div style="text-align:center; color:#666; font-style:italic; padding:10px;">ยังไม่มีฟอนต์เลยจ้า</div>');
+            list.append('<div style="text-align:center; color:#888; font-style:italic; padding:10px;">ยังไม่มีฟอนต์เลยจ้า</div>');
         }
         savedFonts.forEach((font, index) => {
             const item = jQuery(`
@@ -289,23 +58,228 @@ jQuery(document).ready(function () {
         });
     }
 
-    // คลิกปุ่มเปิดหน้าต่าง (ป้องกันการลากแล้วกลายเป็นการคลิก)
-    let isDragClick = false;
-    floatingBtn.on('mousedown', () => { isDragClick = false; });
-    floatingBtn.on('mousemove', () => { isDragClick = true; });
+    // เริ่มต้นระบบ: โหลดฟอนต์ที่เคยบันทึกไว้
+    savedFonts.forEach(font => injectFont(font.name, font.data));
+    if (currentFont) applyFont(currentFont);
+
+    // ---------------------------------------------------------
+    // 3. สร้างหน้าตา UI (User Interface)
+    // ---------------------------------------------------------
+
+    // 3.1 เพิ่ม CSS ตกแต่งปุ่ม
+    const customStyle = `
+        <style>
+            .baby-file-label {
+                display: block; width: 100%; padding: 10px;
+                background: rgba(255, 153, 181, 0.2);
+                border: 1px dashed #ff99b5; border-radius: 8px;
+                text-align: center; color: #ffb7c5; cursor: pointer;
+                transition: all 0.3s ease; margin-top: 5px;
+            }
+            .baby-file-label:hover {
+                background: rgba(255, 153, 181, 0.4); color: white; border-style: solid;
+            }
+            .baby-btn-pink {
+                background: linear-gradient(45deg, #ff99b5, #ff5e7e);
+                color: white; border: none; padding: 8px 15px;
+                border-radius: 20px; cursor: pointer;
+                box-shadow: 0 2px 5px rgba(255, 94, 126, 0.4);
+                transition: transform 0.2s;
+            }
+            .baby-btn-pink:active { transform: scale(0.95); }
+            #baby-font-upload { display: none; }
+        </style>
+    `;
+    jQuery('head').append(customStyle);
+
+    // 3.2 สร้างหน้าต่าง Modal (หน้าต่างหลัก)
+    const modalHtml = `
+        <div id="baby-font-manager-modal" class="baby-font-modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:9999; width: 400px; max-height: 80vh; overflow-y: auto; background: rgba(20, 20, 20, 0.95); border: 2px solid #ff99b5; border-radius: 15px; padding: 20px; box-shadow: 0 0 20px rgba(255, 153, 181, 0.3); backdrop-filter: blur(10px);">
+
+            <!-- ส่วนหัว: ลากได้ -->
+            <div id="baby-modal-header" style="cursor: grab; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,153,181,0.3);">
+                <h3 style="color:#ff99b5; text-align:center; margin:0; pointer-events: none;">🎀 คลังฟอนต์ของคุณเบบี้ 🎀</h3>
+                <div style="text-align:center; font-size: 0.8em; color: #888;">(ลากตรงนี้เพื่อย้ายตำแหน่ง)</div>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label style="color: white; font-weight: bold;">1. เลือกไฟล์ฟอนต์ (.ttf / .otf)</label>
+                <label for="baby-font-upload" class="baby-file-label">📂 จิ้มตรงนี้เพื่อเลือกไฟล์ฟอนต์ค่ะ</label>
+                <input type="file" id="baby-font-upload" accept=".ttf,.otf">
+                <div id="file-name-display" style="color: #ff99b5; font-size: 0.9em; margin-top: 5px; text-align: center; min-height: 1.2em;"></div>
+
+                <label style="color: white; font-weight: bold; margin-top: 10px; display: block;">2. ตั้งชื่อฟอนต์</label>
+                <input type="text" id="baby-font-name" placeholder="เช่น 'ลายมือน่ารัก'..." style="width:100%; margin-top:5px; background:rgba(255,255,255,0.1); color:white; border:1px solid #555; padding:8px; border-radius: 5px; outline: none;">
+
+                <button id="baby-save-btn" class="baby-btn-pink" style="width:100%; margin-top:15px;">บันทึกฟอนต์ ✨</button>
+            </div>
+
+            <div style="border-top: 1px solid rgba(255,153,181,0.3); margin-top: 15px; padding-top: 10px;">
+                <h4 style="color:white; margin: 0 0 10px 0;">รายการฟอนต์ที่มี:</h4>
+                <div id="baby-font-list" style="max-height: 150px; overflow-y: auto; padding-right: 5px;"></div>
+            </div>
+
+            <div style="margin-top: 15px; display: flex; align-items: center; gap: 10px; color: white; font-size: 0.9em;">
+                <input type="checkbox" id="baby-toggle-float" checked>
+                <label for="baby-toggle-float" style="cursor: pointer;">แสดงปุ่มลอยฟ้า (Floating Button)</label>
+            </div>
+
+            <button id="baby-reset-btn" class="baby-btn" style="background:#ffcc00; color:black; width:100%; margin-top:5px; border: none; padding: 8px; border-radius: 5px; cursor: pointer; font-weight: bold;">↺ คืนค่าฟอนต์เดิม (Reset)</button>
+            <button id="baby-close-btn" style="background:transparent; border: 1px solid #555; color:#aaa; width:100%; margin-top:15px; padding: 8px; border-radius: 5px; cursor: pointer;">ปิดหน้าต่าง</button>
+        </div>
+    `;
+
+    // ล้างของเก่าแล้วสร้างใหม่
+    if (jQuery('#baby-font-manager-modal').length > 0) jQuery('#baby-font-manager-modal').remove();
+    jQuery('body').append(modalHtml);
+
+    // 3.3 สร้างปุ่มลอยฟ้า (Floating Button)
+    if (jQuery('#baby-font-trigger-btn').length > 0) jQuery('#baby-font-trigger-btn').remove();
+    const floatingBtn = jQuery(`<div id="baby-font-trigger-btn" title="เปลี่ยนฟอนต์">🎀</div>`);
+
+    floatingBtn.css({
+        "position": "fixed",
+        "top": savedBtnPos.top,
+        "right": savedBtnPos.right,
+        "left": savedBtnPos.left || "auto",
+        "z-index": "10000",
+        "cursor": "grab",
+        "font-size": "24px",
+        "background": "rgba(20, 20, 20, 0.6)",
+        "border-radius": "50%",
+        "width": "45px", "height": "45px",
+        "display": "flex", "align-items": "center", "justify-content": "center",
+        "backdrop-filter": "blur(5px)",
+        "border": "2px solid #ff99b5",
+        "box-shadow": "0 0 10px rgba(255, 153, 181, 0.5)",
+        "user-select": "none"
+    });
+    jQuery('body').append(floatingBtn);
+
+    // 3.4 สร้างปุ่มในเมนู Extensions (SillyTavern Menu)
+    const menuBtn = jQuery(`
+        <div class="list-group-item" id="baby-font-menu-item" title="เปิดหน้าต่างจัดการฟอนต์" style="cursor: pointer; display: flex; align-items: center; gap: 10px;">
+            <span class="fa-solid fa-font" style="color: #ff99b5;"></span>
+            <span>Baby Font Manager</span>
+        </div>
+    `);
+    // เช็คก่อนว่ามีปุ่มนี้หรือยัง แล้วค่อยใส่
+    if (jQuery('#baby-font-menu-item').length === 0) {
+        jQuery('#extensions_menu').append(menuBtn);
+    }
+
+    // ---------------------------------------------------------
+    // 4. จัดการ Logic การทำงาน (Logic & Events)
+    // ---------------------------------------------------------
+
+    // [Logic] ซ่อน/แสดงปุ่มลอยฟ้า
+    const isFloatingHidden = localStorage.getItem("BabyFont_HideFloat") === "true";
+    if (isFloatingHidden) {
+        floatingBtn.hide();
+        jQuery('#baby-toggle-float').prop('checked', false);
+    }
+    jQuery(document).on('change', '#baby-toggle-float', function() {
+        if(this.checked) {
+            floatingBtn.fadeIn();
+            localStorage.setItem("BabyFont_HideFloat", "false");
+        } else {
+            floatingBtn.fadeOut();
+            localStorage.setItem("BabyFont_HideFloat", "true");
+        }
+    });
+
+    // [Logic] ลากปุ่มลอยฟ้า (Draggable Button)
+    let isDraggingBtn = false;
+    let offsetBtn = { x: 0, y: 0 };
+    let isDragClick = false; // ตัวกันไม่ให้การลากกลายเป็นการคลิก
+
+    floatingBtn.on('mousedown', function(e) {
+        isDraggingBtn = true; isDragClick = false;
+        offsetBtn.x = e.clientX - floatingBtn[0].getBoundingClientRect().left;
+        offsetBtn.y = e.clientY - floatingBtn[0].getBoundingClientRect().top;
+        floatingBtn.css('cursor', 'grabbing');
+    });
+
+    jQuery(document).on('mousemove', function(e) {
+        if (isDraggingBtn) {
+            isDragClick = true; e.preventDefault();
+            const newTop = e.clientY - offsetBtn.y;
+            const newLeft = e.clientX - offsetBtn.x;
+            floatingBtn.css({ top: newTop + 'px', left: newLeft + 'px', right: 'auto' });
+        }
+    });
+
+    jQuery(document).on('mouseup', function() {
+        if (isDraggingBtn) {
+            isDraggingBtn = false;
+            floatingBtn.css('cursor', 'grab');
+            const pos = { top: floatingBtn.css('top'), left: floatingBtn.css('left'), right: 'auto' };
+            localStorage.setItem(storageKey + "_BtnPos", JSON.stringify(pos));
+        }
+    });
+
+    // [Logic] ลากหน้าต่าง Modal (Draggable Modal)
+    const modal = jQuery('#baby-font-manager-modal');
+    const header = jQuery('#baby-modal-header');
+    let isDraggingModal = false;
+    let offsetModal = { x: 0, y: 0 };
+
+    header.on('mousedown', function(e) {
+        isDraggingModal = true;
+        offsetModal.x = e.clientX - modal[0].getBoundingClientRect().left;
+        offsetModal.y = e.clientY - modal[0].getBoundingClientRect().top;
+        header.css('cursor', 'grabbing');
+    });
+
+    jQuery(document).on('mousemove', function(e) {
+        if (isDraggingModal) {
+            e.preventDefault();
+            const newTop = e.clientY - offsetModal.y;
+            const newLeft = e.clientX - offsetModal.x;
+            modal.css({ top: newTop + 'px', left: newLeft + 'px', transform: 'none' });
+        }
+    });
+
+    jQuery(document).on('mouseup', function() {
+        if (isDraggingModal) {
+            isDraggingModal = false;
+            header.css('cursor', 'grab');
+        }
+    });
+
+    // ---------------------------------------------------------
+    // 5. Event Listeners (การกดปุ่มต่างๆ)
+    // ---------------------------------------------------------
+
+    // กดปุ่มลอยฟ้า -> เปิดหน้าต่าง
     floatingBtn.on('mouseup', () => {
         if (!isDragClick) {
             updateFontList();
             modal.fadeIn();
-            // รีเซ็ตตำแหน่ง Modal ให้มากลางจอถ้าเพิ่งเปิดครั้งแรก หรือถ้ามันหลุดจอไป
-            if (modal.css('display') !== 'none' && modal.css('transform') !== 'none') {
-                // ถ้ายังไม่ได้ลาก (ยังมี transform) ให้ปล่อยไว้
-            }
         }
     });
 
+    // กดปุ่มในเมนู -> เปิดหน้าต่าง
+    menuBtn.on('click', () => {
+        updateFontList();
+        modal.fadeIn();
+    });
+
+    // ปุ่มปิดหน้าต่าง
     jQuery('#baby-close-btn').on('click', () => modal.fadeOut());
 
+    // แสดงชื่อไฟล์เมื่อเลือก
+    jQuery(document).on('change', '#baby-font-upload', function() {
+        const fileName = this.files[0] ? this.files[0].name : "";
+        if (fileName) {
+            jQuery('#file-name-display').text("✅ เลือกไฟล์: " + fileName);
+            jQuery('.baby-file-label').css('border-style', 'solid').css('background', 'rgba(255, 153, 181, 0.4)');
+        } else {
+            jQuery('#file-name-display').text("");
+        }
+    });
+
+    // ปุ่มบันทึกฟอนต์ (Save)
     jQuery('#baby-save-btn').on('click', () => {
         const fileInput = document.getElementById('baby-font-upload');
         const nameInput = jQuery('#baby-font-name').val();
@@ -314,18 +288,6 @@ jQuery(document).ready(function () {
             toastr.error("อย่าลืมเลือกไฟล์และตั้งชื่อฟอนต์นะครับ!", "แจ้งเตือน");
             return;
         }
-
-            // เมื่อกดปุ่ม Reset
-    jQuery('#baby-reset-btn').on('click', () => {
-        // 1. ล้างค่า CSS ที่เราเคยสั่ง body ไว้ (ให้กลับไปเป็นค่าว่าง)
-        jQuery('body').css('font-family', '');
-
-        // 2. ลบความจำว่าเราเคยเลือกฟอนต์อะไรไว้
-        localStorage.removeItem(storageKey + "_Active");
-
-        // 3. แจ้งเตือน
-        toastr.info("กลับมาใช้ฟอนต์ดั้งเดิมแล้วครับ!", "Reset");
-         });
 
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -337,6 +299,7 @@ jQuery(document).ready(function () {
             updateFontList();
             toastr.success("บันทึกฟอนต์เรียบร้อยครับ!", "สำเร็จ");
 
+            // เคลียร์ค่า
             fileInput.value = '';
             jQuery('#baby-font-name').val('');
             jQuery('#file-name-display').text('');
@@ -345,6 +308,16 @@ jQuery(document).ready(function () {
         reader.readAsDataURL(fileInput.files[0]);
     });
 
+    // ปุ่มรีเซ็ตฟอนต์ (Reset) - แยกออกมาข้างนอกแล้ว!
+    jQuery('#baby-reset-btn').on('click', () => {
+        if(confirm('จะคืนค่าฟอนต์เป็นแบบเดิมใช่ไหมครับ?')) {
+            jQuery('body').css('font-family', '');
+            localStorage.removeItem(storageKey + "_Active");
+            toastr.info("กลับมาใช้ฟอนต์ดั้งเดิมแล้วครับ!", "Reset");
+        }
+    });
+
+    // ฟังก์ชัน Global ให้ปุ่มในรายการเรียกใช้ได้
     window.applyBabyFont = applyFont;
     window.deleteBabyFont = (index) => {
         if(confirm('ลบฟอนต์นี้จริงๆ เหรอคะ?')) {
@@ -353,15 +326,4 @@ jQuery(document).ready(function () {
             updateFontList();
         }
     };
-
-        // --- ส่วนเพิ่มปุ่มในเมนู Extensions (SillyTavern Menu) ---
-
-    // สร้างปุ่มในรายการ
-    const menuBtn = jQuery(`
-        <div class="list-group-item" id="baby-font-menu-item" title="เปิดหน้าต่างจัดการฟอนต์" style="cursor: pointer; display: flex; align-items: center; gap: 10px;">
-            <span class="fa-solid fa-font" style="color: #ff99b5;"></span>
-            <span>Baby Font Manager</span>
-        </div>
-    `);
-
 });
