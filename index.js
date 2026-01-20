@@ -83,10 +83,6 @@ jQuery(document).ready(function () {
 
             /* Responsive Modal: มือถือให้กว้างเกือบเต็มจอ */
             #baby-font-manager-modal {
-                position: fixed !important;   /* ยืนยันว่าต้องลอย */
-                top: 50% !important;          /* ดึงลงมาจากด้านบน 50% */
-                left: 50% !important;         /* ดึงมาจากด้านซ้าย 50% */
-                transform: translate(-50%, -50%) !important; /* เลื่อนตัวเองกลับมาให้กึ่งกลางพอดี */
                 width: 90vw !important; /* กว้าง 90% ของจอ */
                 max-width: 400px;       /* แต่ไม่เกิน 400px */
                 max-height: 85vh;
@@ -96,7 +92,7 @@ jQuery(document).ready(function () {
     jQuery('head').append(customStyle);
 
     const modalHtml = `
-        <div id="baby-font-manager-modal" class="baby-font-modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:9999; overflow-y: auto; background: rgba(20, 20, 20, 0.95); border: 2px solid #ff99b5; border-radius: 15px; padding: 20px; box-shadow: 0 0 20px rgba(255, 153, 181, 0.3); backdrop-filter: blur(10px);">
+        <div id="baby-font-manager-modal" class="baby-font-modal" style="display:none; margin: 10px auto; z-index:9999; overflow-y: auto; background: rgba(20, 20, 20, 0.95); border: 2px solid #ff99b5; border-radius: 15px; padding: 20px; box-shadow: 0 0 20px rgba(255, 153, 181, 0.3); backdrop-filter: blur(10px);">
 
             <div id="baby-modal-header" style="cursor: grab; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,153,181,0.3); touch-action: none;"> <!-- touch-action: none สำคัญมากสำหรับกันจอมือถือเลื่อนตาม -->
                 <h3 style="color:#ff99b5; text-align:center; margin:0; pointer-events: none;">🎀 คลังฟอนต์ของคุณเบบี้ 🎀</h3>
