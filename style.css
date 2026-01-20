@@ -1,8 +1,8 @@
 /* พื้นหลังม่านบังตา เวลาเปิดหน้าต่าง */
 .baby-font-modal {
     display: none; /* ซ่อนไว้ก่อน */
-    position: fixed;
-    z-index: 20000; /* อยู่บนสุดเสมอ */
+    position: relative;
+    margin: 10% auto; /* จัดกึ่งกลาง */
     left: 0;
     top: 0;
     width: 100%;
