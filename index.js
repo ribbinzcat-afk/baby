@@ -103,6 +103,18 @@ jQuery(document).ready(function () {
                 </div>
             </div>
 
+            <!-- 👇 เพิ่มส่วนนี้เข้าไปครับ: ตัวเลือกเปิด/ปิดปุ่มลอยฟ้า 👇 -->
+            <div style="margin-top: 15px; display: flex; align-items: center; gap: 10px; color: white; font-size: 0.9em;">
+                <input type="checkbox" id="baby-toggle-float" checked>
+                <label for="baby-toggle-float" style="cursor: pointer;">แสดงปุ่มลอยฟ้า (Floating Button)</label>
+            </div>
+            <!-- 👆 จบส่วนที่เพิ่ม 👆 -->
+
+            // เพิ่มปุ่มนี้เข้าไปครับ (สีส้มๆ จะได้ดูต่างจากปุ่มอื่น)
+            <button id="baby-reset-btn" class="baby-btn" style="background:#ffcc00; color:black; width:100%; margin-top:5px; border: none; padding: 8px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+    ↺ คืนค่าฟอนต์เดิม (Reset)
+            </button>
+
             <button id="baby-close-btn" style="background:transparent; border: 1px solid #555; color:#aaa; width:100%; margin-top:15px; padding: 8px; border-radius: 5px; cursor: pointer;">ปิดหน้าต่าง</button>
         </div>
     `;
@@ -142,6 +154,27 @@ jQuery(document).ready(function () {
     });
 
     jQuery('body').append(floatingBtn);
+
+        // --- Logic สั่งซ่อน/แสดงปุ่มลอยฟ้า ---
+
+    // โหลดค่าเดิมที่เคยตั้งไว้ (ถ้าเคยสั่งซ่อนไว้ ก็ให้ซ่อนเลยตอนเปิดมา)
+    const isFloatingHidden = localStorage.getItem("BabyFont_HideFloat") === "true";
+
+    if (isFloatingHidden) {
+        jQuery('#baby-font-trigger-btn').hide(); // ซ่อนปุ่ม
+        jQuery('#baby-toggle-float').prop('checked', false); // เอาติ๊กออก
+    }
+
+    // เมื่อกดติ๊กถูก/เอาออก
+    jQuery(document).on('change', '#baby-toggle-float', function() {
+        if(this.checked) {
+            jQuery('#baby-font-trigger-btn').fadeIn(); // แสดงปุ่ม
+            localStorage.setItem("BabyFont_HideFloat", "false");
+        } else {
+            jQuery('#baby-font-trigger-btn').fadeOut(); // ซ่อนปุ่ม
+            localStorage.setItem("BabyFont_HideFloat", "true");
+        }
+    });
 
     // --- Logic การลากปุ่ม (Draggable Button) ---
     let isDraggingBtn = false;
@@ -271,6 +304,18 @@ jQuery(document).ready(function () {
             return;
         }
 
+            // เมื่อกดปุ่ม Reset
+    jQuery('#baby-reset-btn').on('click', () => {
+        // 1. ล้างค่า CSS ที่เราเคยสั่ง body ไว้ (ให้กลับไปเป็นค่าว่าง)
+        jQuery('body').css('font-family', '');
+
+        // 2. ลบความจำว่าเราเคยเลือกฟอนต์อะไรไว้
+        localStorage.removeItem(storageKey + "_Active");
+
+        // 3. แจ้งเตือน
+        toastr.info("กลับมาใช้ฟอนต์ดั้งเดิมแล้วครับ!", "Reset");
+         });
+
         const reader = new FileReader();
         reader.onload = function(e) {
             const fontData = e.target.result;
@@ -297,4 +342,26 @@ jQuery(document).ready(function () {
             updateFontList();
         }
     };
+
+        // --- ส่วนเพิ่มปุ่มในเมนู Extensions (SillyTavern Menu) ---
+
+    // สร้างปุ่มในรายการ
+    const menuBtn = jQuery(`
+        <div class="list-group-item" id="baby-font-menu-item" title="เปิดหน้าต่างจัดการฟอนต์" style="cursor: pointer; display: flex; align-items: center; gap: 10px;">
+            <span class="fa-solid fa-font" style="color: #ff99b5;"></span>
+            <span>Baby Font Manager</span>
+        </div>
+    `);
+
+    // เช็คก่อนว่ามีปุ่มนี้หรือยัง (กันเบิ้ล) แล้วค่อยยัดเข้าไปในเมนู
+    if (jQuery('#baby-font-menu-item').length === 0) {
+        jQuery('#extensions_menu').append(menuBtn);
+    }
+
+    // กดปุ่มในเมนูแล้วเปิดหน้าต่างเหมือนกัน
+    menuBtn.on('click', () => {
+        updateFontList();
+        jQuery('#baby-font-manager-modal').fadeIn();
+    });
+
 });
