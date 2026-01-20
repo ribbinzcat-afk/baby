@@ -110,7 +110,7 @@ jQuery(document).ready(function () {
             </div>
             <!-- 👆 จบส่วนที่เพิ่ม 👆 -->
 
-            // เพิ่มปุ่มนี้เข้าไปครับ (สีส้มๆ จะได้ดูต่างจากปุ่มอื่น)
+
             <button id="baby-reset-btn" class="baby-btn" style="background:#ffcc00; color:black; width:100%; margin-top:5px; border: none; padding: 8px; border-radius: 5px; cursor: pointer; font-weight: bold;">
     ↺ คืนค่าฟอนต์เดิม (Reset)
             </button>
@@ -131,6 +131,17 @@ jQuery(document).ready(function () {
     const floatingBtn = jQuery(`
         <div id="baby-font-trigger-btn" title="เปลี่ยนฟอนต์">🎀</div>
     `);
+
+        // เช็คก่อนว่ามีปุ่มนี้หรือยัง (กันเบิ้ล) แล้วค่อยยัดเข้าไปในเมนู
+    if (jQuery('#baby-font-menu-item').length === 0) {
+        jQuery('#extensions_menu').append(menuBtn);
+    }
+
+    // กดปุ่มในเมนูแล้วเปิดหน้าต่างเหมือนกัน
+    menuBtn.on('click', () => {
+        updateFontList();
+        jQuery('#baby-font-manager-modal').fadeIn();
+    });
 
     floatingBtn.css({
         "position": "fixed",
@@ -352,16 +363,5 @@ jQuery(document).ready(function () {
             <span>Baby Font Manager</span>
         </div>
     `);
-
-    // เช็คก่อนว่ามีปุ่มนี้หรือยัง (กันเบิ้ล) แล้วค่อยยัดเข้าไปในเมนู
-    if (jQuery('#baby-font-menu-item').length === 0) {
-        jQuery('#extensions_menu').append(menuBtn);
-    }
-
-    // กดปุ่มในเมนูแล้วเปิดหน้าต่างเหมือนกัน
-    menuBtn.on('click', () => {
-        updateFontList();
-        jQuery('#baby-font-manager-modal').fadeIn();
-    });
 
 });
